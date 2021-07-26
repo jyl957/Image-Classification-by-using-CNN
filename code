@@ -1,0 +1,114 @@
+clc; clear; close all;
+
+images = imageDatastore('my_datasets_1',...
+    'IncludeSubfolders',true,...
+    'LabelSource','foldernames');
+    [trainingImages,validationImages] = splitEachLabel(images,0.7,'randomized');
+    
+    
+%Calculate the number of images in each category to verify
+labelCountT = countEachLabel(trainingImages)
+labelCountV = countEachLabel(validationImages)
+
+dropoutProb = 0.2;
+numF = 16;
+
+layers = [
+    imageInputLayer([128 128 3])
+    
+    % the first layer
+    convolution2dLayer(3,numF,'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    
+    maxPooling2dLayer(3,'Stride',2,'Padding','same')
+    
+    % the second layer
+    convolution2dLayer(3,2*numF,'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    
+    maxPooling2dLayer(3,'Stride',2,'Padding','same')
+    
+    % the third layer
+    convolution2dLayer(3,4*numF,'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    
+    maxPooling2dLayer(3,'Stride',2,'Padding','same')
+    
+    % the fourth layer
+    convolution2dLayer(3,4*numF,'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    
+    convolution2dLayer(3,4*numF,'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+
+    maxPooling2dLayer(3,'Stride',2,'Padding','same')
+  
+     
+    dropoutLayer(dropoutProb)
+    
+    fullyConnectedLayer(5)
+    softmaxLayer
+    classificationLayer];
+
+%Specify trainging options
+options = trainingOptions('adam',...
+    'InitialLearnRate',3e-4, ... 
+    'MaxEpochs',10, ...
+    'ValidationData',validationImages,...    % Use Validation data
+    'ValidationFrequency',30,...
+    'Verbose',false,...
+    'Plots','training-progress');
+
+%Train network using training data
+net = trainNetwork(trainingImages,layers,options);  % Use training data
+
+%Classify Validation Images and Compute Accuracy
+predictedLabels = classify(net,validationImages); % Use Validation data
+valLabels = validationImages.Labels;
+
+
+%-------------
+
+im1 = imread('test1.jpg');
+imr1 = imresize(im1,0.36);
+figure(1)
+imshow(imr1)
+[label1,score] = classify(net,imr1);
+label1(1,1)
+
+
+im2 = imread('test2.jpg');
+imr2 = imresize(im2,0.085);
+figure(2)
+imshow(imr2)
+[label2,score] = classify(net,imr2);
+label2(1,1)
+
+
+im3 = imread('test3.jpg');
+imr3 = imresize(im3,0.1066);
+figure(3)
+imshow(imr3)
+[label3,score] = classify(net,imr3);
+label3(1,1)
+
+
+im4 = imread('test4.jpg');
+imr4 = imresize(im4,0.125);
+figure(4)
+imshow(imr4)
+[label4,score] = classify(net,imr4);
+label4(1,1)
+
+
+im5 = imread('test5.jpg');
+imr5 = imresize(im5,0.4266);
+figure(5)
+imshow(imr5)
+[label5,score] = classify(net,imr5);
+label5(1,1)
